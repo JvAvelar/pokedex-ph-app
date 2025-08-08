@@ -1,30 +1,31 @@
 package com.vitoravelar.pokedex.service.remote
 
-import com.vitoravelar.pokedex.feature.model.Pokemon
+import com.vitoravelar.pokedex.feature.model.PokemonResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface PokeService {
 
-    @GET("/pokemon")
+    @GET("pokemon")
     @Headers("Content-type: application/json")
-    suspend fun getAllPokemons(): Response<List<Pokemon>>
+    suspend fun getAllPokemons(
+        @Query("limit") limit: Int = 20,
+        @Query("offset") offset: Int = 0
+    ): Response<List<PokemonResponse>>
 
-    @GET("/pokemon/{id}")
+    @GET("pokemon/{idOrName}")
     @Headers("Content-type: application/json")
-    suspend fun getPokemonById(@Path(value = "id") id: Int): Response<Pokemon>
+    suspend fun getPokemonById(@Path(value = "idOrName") idOrName: Int): Response<PokemonResponse> // Response<PokemonDetail>
 
-    @GET("/pokemon/{name}")
-    @Headers("Content-type: application/json")
-    suspend fun getPokemonByName(@Path(value = "name") name: String): Response<Pokemon>
 
-    @GET("/type}")
+    @GET("type}")
     @Headers("Content-type: application/json")
     suspend fun getTypePokemon() // : Response<Type>
 
-    @GET("/ability}")
+    @GET("ability}")
     @Headers("Content-type: application/json")
     suspend fun getAbility() // : Response<Ability>
 

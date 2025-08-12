@@ -6,7 +6,7 @@ import com.vitoravelar.pokedex.feature.model.PokemonItem
 import com.vitoravelar.pokedex.feature.model.TypeItem
 import com.vitoravelar.pokedex.service.remote.PokeApiService
 
-class PokeApiRepository(val service: PokeApiService) {
+class PokeApiRepository(private val service: PokeApiService) {
 
     suspend fun getPokemonList(limit: Int = 20, offset: Int = 0): List<PokemonItem> {
         return try {

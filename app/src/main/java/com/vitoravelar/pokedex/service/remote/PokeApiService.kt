@@ -21,8 +21,8 @@ interface PokeApiService {
 
     @GET("pokemon/{idOrName}")
     @Headers("Content-type: application/json")
-    suspend fun getPokemonById(
-        @Path(value = "idOrName") idOrName: Int
+    suspend fun getPokemonByIdOrName(
+        @Path(value = "idOrName") idOrName: String
     ): Response<PokemonDetail>
 
     @GET("type}")

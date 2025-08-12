@@ -48,7 +48,7 @@ fun BaseTopAppBar(
                     }
                 }
             },
-            colors = TopAppBarDefaults.mediumTopAppBarColors(
+            colors = TopAppBarDclearefaults.mediumTopAppBarColors(
                 containerColor = Color.Transparent
             ),
             modifier = Modifier.padding(horizontal = 16.dp)

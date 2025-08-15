@@ -5,7 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
-import com.vitoravelar.pokedex.service.database.dao.PokeDao
 
 @Database(entities = [PokemonDetailEntity::class], version = 1)
 abstract class PokeDatabase : RoomDatabase() {

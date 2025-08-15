@@ -1,14 +1,13 @@
 package com.vitoravelar.pokedex.service.repository
 
 import android.content.Context
-import androidx.navigation.internal.NavContext
+import androidx.lifecycle.LiveData
 import com.vitoravelar.pokedex.feature.model.AbilityItem
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.feature.model.PokemonItem
 import com.vitoravelar.pokedex.feature.model.TypeItem
 import com.vitoravelar.pokedex.service.database.PokeDatabase
-import com.vitoravelar.pokedex.service.database.dao.PokeDao
 import com.vitoravelar.pokedex.service.remote.PokeApiService
 import com.vitoravelar.pokedex.service.remote.RetrofitConfig
 
@@ -31,8 +30,10 @@ class PokeApiRepository private constructor(context: Context) {
     }
 
     suspend fun addFavorite(pokemon: PokemonDetailEntity) = database.insert(pokemon)
+
     suspend fun removeFavorite(pokemon: PokemonDetailEntity) = database.delete(pokemon)
-    fun getFavoriteList() = database.getAllPokemons()
+
+    fun getFavoriteList(): LiveData<List<PokemonDetailEntity>> = database.getAllPokemons()
 
     suspend fun getPokemonList(limit: Int = 20, offset: Int = 0): List<PokemonItem> {
         return try {

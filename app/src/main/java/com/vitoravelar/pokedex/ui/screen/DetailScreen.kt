@@ -29,15 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -48,6 +46,7 @@ import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.component.CardError
 import com.vitoravelar.pokedex.ui.component.LoadingBar
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
+import com.vitoravelar.pokedex.utils.PokemonTypeColors
 
 @Composable
 fun DetailScreen(
@@ -55,33 +54,33 @@ fun DetailScreen(
     navController: NavHostController,
     pokemonName: String
 ) {
+    val pokemonState by viewModel.getPokemonByIdOrName.observeAsState(PokeApiViewModel.UiState.Loading)
+
     LaunchedEffect(Unit) {
         viewModel.getPokemonByIdOrName(pokemonName)
     }
 
-    val pokemonState by viewModel.getPokemonByIdOrName.observeAsState(PokeApiViewModel.UiState.Loading)
-
-    when (pokemonState) {
-        is PokeApiViewModel.UiState.Loading -> {
-            LoadingBar()
+    Scaffold(
+        topBar = {
+            BaseTopAppBar(
+                title = stringResource(R.string.title_details),
+                onLeftIconClick = { navController.popBackStack() })
         }
+    ) { paddings ->
+        when (pokemonState) {
+            is PokeApiViewModel.UiState.Loading -> {
+                LoadingBar(paddings)
+            }
 
-        is PokeApiViewModel.UiState.Success -> {
-            val pokemon = (pokemonState as PokeApiViewModel.UiState.Success).data!!
-            Scaffold(
-                topBar = {
-                    BaseTopAppBar(
-                        title = "Pokemon details",
-                        onLeftIconClick = { navController.popBackStack() })
-                }
-            ) { paddings ->
+            is PokeApiViewModel.UiState.Success -> {
+                val pokemon = (pokemonState as PokeApiViewModel.UiState.Success).data!!
                 DetailCard(paddings, pokemon, viewModel)
             }
-        }
 
-        is PokeApiViewModel.UiState.Error -> {
-            val message = (pokemonState as PokeApiViewModel.UiState.Error).message
-            CardError(message)
+            is PokeApiViewModel.UiState.Error -> {
+                val message = (pokemonState as PokeApiViewModel.UiState.Error).message
+                CardError(message)
+            }
         }
     }
 }
@@ -96,7 +95,6 @@ private fun DetailCard(
     Card(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorResource(R.color.background))
             .padding(padding)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
@@ -108,26 +106,27 @@ private fun DetailCard(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                var clickable by remember { mutableStateOf(false) }
+                val favorite by viewModel.listAllFavorite.observeAsState(emptyList())
+                val isFavorite = favorite.any { it.id == pokemon.id }
+
                 IconButton(onClick = {
-                    clickable = !clickable
                     val pokemonEntity = PokemonDetailEntity(
                         pokemon.id,
                         pokemon.name,
                         pokemon.sprites.other.officialArtwork.imageUrl!!,
                         pokemon.types[0].type.name
                     )
-                    if (clickable)
-                        viewModel.addFavorite(pokemonEntity)
-                    else
-                        viewModel.removeFavorite(pokemonEntity)
+                    if (isFavorite) viewModel.removeFavorite(pokemonEntity)
+                    else viewModel.addFavorite(pokemonEntity)
+
                 }) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = "Left Icon",
                         modifier = Modifier.size(24.dp),
-                        tint = if (clickable) Color.Red else Color.LightGray
+                        tint = if (isFavorite) Color.Red else Color.LightGray
                     )
                 }
             }
@@ -155,24 +154,7 @@ private fun DetailCard(
                         onClick = {},
                         label = { Text(typeSlot.type.name.uppercase()) },
                         colors = AssistChipDefaults.assistChipColors(
-                            containerColor = when (typeSlot.type.name.lowercase()) {
-                                "water" -> colorResource(R.color.water)
-                                "fire" -> colorResource(R.color.fire)
-                                "grass" -> colorResource(R.color.grass)
-                                "electric" -> colorResource(R.color.eletric)
-                                "ground" -> colorResource(R.color.ground)
-                                "poison" -> colorResource(R.color.poison)
-                                "normal" -> colorResource(R.color.normal)
-                                "flying" -> colorResource(R.color.flying)
-                                "fighting" -> colorResource(R.color.fighting)
-                                "ice" -> colorResource(R.color.ice)
-                                "ghost" -> colorResource(R.color.ghost)
-                                "rock" -> colorResource(R.color.rock)
-                                "bug" -> colorResource(R.color.bug)
-                                "dragon" -> colorResource(R.color.dragon)
-                                "psychic" -> colorResource(R.color.psychic)
-                                else -> Color.White
-                            }
+                            containerColor = PokemonTypeColors.getColor(typeSlot.type.name)
                         )
                     )
                 }
@@ -191,7 +173,7 @@ private fun DetailCard(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Statistics",
+                    text = stringResource(R.string.statistics),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -199,7 +181,8 @@ private fun DetailCard(
                 pokemon.stats.forEach { stat ->
                     Text(
                         text = "${stat.stat.name.replaceFirstChar { it.uppercase() }}: ${stat.baseStat}",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 16.sp
                     )
                 }
             }
@@ -217,7 +200,7 @@ private fun DetailCard(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Skills",
+                    text = stringResource(R.string.skills),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -225,7 +208,8 @@ private fun DetailCard(
                 pokemon.abilities.forEach { abilitySlot ->
                     Text(
                         text = abilitySlot.ability.name.replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 16.sp
                     )
                 }
             }

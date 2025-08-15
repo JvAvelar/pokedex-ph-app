@@ -1,23 +1,21 @@
 package com.vitoravelar.pokedex.ui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vitoravelar.pokedex.feature.model.AbilityItem
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
+import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.feature.model.PokemonItem
 import com.vitoravelar.pokedex.feature.model.TypeItem
-import com.vitoravelar.pokedex.service.remote.PokeApiService
-import com.vitoravelar.pokedex.service.remote.RetrofitConfig
 import com.vitoravelar.pokedex.service.repository.PokeApiRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class PokeApiViewModel : ViewModel() {
-
-    private val repository = PokeApiRepository(
-        RetrofitConfig.getService(PokeApiService::class.java)
-    )
+class PokeApiViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = PokeApiRepository.getInstance(application.applicationContext)
 
     sealed class UiState<out T> {
         object Loading : UiState<Nothing>()
@@ -26,10 +24,11 @@ class PokeApiViewModel : ViewModel() {
     }
 
     private val _getPokemonList = MutableLiveData<UiState<List<PokemonItem>>>()
-    val getPokemonList: LiveData<UiState<List<PokemonItem>>> = _getPokemonList
 
-    private val _getPokemon = MutableLiveData<UiState<PokemonDetail?>>()
-    val getPokemon: LiveData<UiState<PokemonDetail?>> = _getPokemon
+    val pokemonList: LiveData<UiState<List<PokemonItem>>> = _getPokemonList
+
+    private val _getPokemonByIdOrName = MutableLiveData<UiState<PokemonDetail?>>()
+    val getPokemonByIdOrName: LiveData<UiState<PokemonDetail?>> = _getPokemonByIdOrName
 
     private val _getType = MutableLiveData<UiState<List<TypeItem>>>()
     val getType: LiveData<UiState<List<TypeItem>>> = _getType
@@ -37,13 +36,26 @@ class PokeApiViewModel : ViewModel() {
     private val _getAbility = MutableLiveData<UiState<List<AbilityItem>>>()
     val getAbility: LiveData<UiState<List<AbilityItem>>> = _getAbility
 
+    private val _searchText = MutableLiveData("")
+    val searchText: LiveData<String> = _searchText
+
+    fun onSearchTextChange(newText: String) {
+        _searchText.value = newText
+    }
+
+    fun addFavorite(pokemon: PokemonDetailEntity) = viewModelScope.launch { repository.addFavorite(pokemon) }
+    fun removeFavorite(pokemon: PokemonDetailEntity) = viewModelScope.launch { repository.removeFavorite(pokemon) }
+    fun getAllFavorite() = repository.getFavoriteList()
+
 
     fun getPokemonList(limit: Int = 20, offset: Int = 0) {
         viewModelScope.launch {
             _getPokemonList.postValue(UiState.Loading)
+            
             try {
+                delay(5000)
                 _getPokemonList.postValue(UiState.Success(repository.getPokemonList(limit, offset)))
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _getPokemonList.postValue(UiState.Error(e.message ?: "Erro desconhecido"))
             }
         }
@@ -51,21 +63,22 @@ class PokeApiViewModel : ViewModel() {
 
     fun getPokemonByIdOrName(idOrName: String) {
         viewModelScope.launch {
-            _getPokemon.postValue(UiState.Loading)
+            _getPokemonByIdOrName.postValue(UiState.Loading)
             try {
-                _getPokemon.postValue(UiState.Success(repository.getPokemonByIdOrName(idOrName)))
-            } catch (e: Exception){
-                _getPokemon.postValue(UiState.Error(e.message ?: "Erro desconhecido"))
+                _getPokemonByIdOrName.postValue(
+                    UiState.Success(repository.getPokemonByIdOrName(idOrName.lowercase().trim())))
+            } catch (e: Exception) {
+                _getPokemonByIdOrName.postValue(UiState.Error(e.message ?: "Erro desconhecido"))
             }
         }
     }
 
     fun getTypePokemon() {
         viewModelScope.launch {
-       _getType.postValue(UiState.Loading)
+            _getType.postValue(UiState.Loading)
             try {
                 _getType.postValue(UiState.Success(repository.getTypePokemon()))
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _getType.postValue(UiState.Error(e.message ?: "Erro desconhecido"))
             }
         }
@@ -76,7 +89,7 @@ class PokeApiViewModel : ViewModel() {
             _getAbility.postValue(UiState.Loading)
             try {
                 _getAbility.postValue(UiState.Success(repository.getAbility()))
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _getAbility.postValue(UiState.Error(e.message ?: "Erro desconhecido"))
             }
         }

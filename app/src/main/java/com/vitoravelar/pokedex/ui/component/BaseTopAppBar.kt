@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,8 +25,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vitoravelar.pokedex.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,18 +43,18 @@ fun BaseTopAppBar(
     Column(
         modifier = Modifier
             .wrapContentWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-            .background(colorResource(R.color.primary_color)),
+            .height(70.dp)
+            .background(Color.Gray),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopAppBar(
             title = {
                 Text(
                     text = title,
-                    color = Color.White,
                     modifier = Modifier.fillMaxWidth(),
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 22.sp
                 )
             },
             navigationIcon = {
@@ -60,6 +63,7 @@ fun BaseTopAppBar(
                         Icon(
                             imageVector = leftIcon,
                             contentDescription = "Left Icon",
+                            modifier = Modifier.size(24.dp),
                             tint = Color.White
                         )
                     }
@@ -71,6 +75,7 @@ fun BaseTopAppBar(
                         Icon(
                             imageVector = rightIcon,
                             contentDescription = "Right Icon",
+                            modifier = Modifier.size(24.dp),
                             tint = Color.White
                         )
                     }

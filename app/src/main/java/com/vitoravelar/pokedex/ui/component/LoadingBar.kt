@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.vitoravelar.pokedex.R
 
 @Composable
-fun LoadingBar(paddingValues: PaddingValues){
+fun LoadingBar(paddingValues: PaddingValues = PaddingValues()){
     Column(
         modifier = Modifier
             .fillMaxSize()

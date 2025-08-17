@@ -9,5 +9,6 @@
     <string name="statistics">Statistics</string>
     <string name="skills">Skills</string>
     <string name="loading_pokemons">Loading pokemons…</string>
+    <string name="pokemon_not_found">Pokemon not found</string>
 
 </resources>

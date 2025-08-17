@@ -1,5 +1,8 @@
 package com.vitoravelar.pokedex.ui.screen
 
+import android.annotation.SuppressLint
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,14 +27,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,12 +49,17 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.vitoravelar.pokedex.R
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
+import com.vitoravelar.pokedex.feature.navigation.Screen
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.component.CardError
 import com.vitoravelar.pokedex.ui.component.LoadingBar
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
 import com.vitoravelar.pokedex.utils.PokemonTypeColors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun DetailScreen(
     viewModel: PokeApiViewModel,
@@ -55,9 +67,15 @@ fun DetailScreen(
     pokemonName: String
 ) {
     val pokemonState by viewModel.getPokemonByIdOrName.observeAsState(PokeApiViewModel.UiState.Loading)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.getPokemonByIdOrName(pokemonName)
+    }
+
+    BackHandler {
+        navController.popBackStack()
     }
 
     Scaffold(
@@ -65,16 +83,25 @@ fun DetailScreen(
             BaseTopAppBar(
                 title = stringResource(R.string.title_details),
                 onLeftIconClick = { navController.popBackStack() })
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddings ->
-        when (pokemonState) {
+        when (val state = pokemonState) {
             is PokeApiViewModel.UiState.Loading -> {
                 LoadingBar(paddings)
             }
 
             is PokeApiViewModel.UiState.Success -> {
-                val pokemon = (pokemonState as PokeApiViewModel.UiState.Success).data!!
-                DetailCard(paddings, pokemon, viewModel)
+                val pokemon = state.data
+                if (pokemon != null)
+                    DetailCard(paddings, pokemon, viewModel)
+                else {
+                    Toast.makeText(
+                        context, stringResource(R.string.pokemon_not_found),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    navController.popBackStack()
+                }
             }
 
             is PokeApiViewModel.UiState.Error -> {
@@ -120,7 +147,6 @@ private fun DetailCard(
                     )
                     if (isFavorite) viewModel.removeFavorite(pokemonEntity)
                     else viewModel.addFavorite(pokemonEntity)
-
                 }) {
                     Icon(
                         imageVector = Icons.Default.Favorite,

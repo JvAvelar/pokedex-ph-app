@@ -2,6 +2,8 @@ package com.vitoravelar.pokedex.ui.screen
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.vitoravelar.pokedex.R
 import com.vitoravelar.pokedex.feature.model.PokemonItem
+import com.vitoravelar.pokedex.feature.navigation.Screen
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.component.CardError
 import com.vitoravelar.pokedex.ui.component.LoadingBar
@@ -68,11 +71,13 @@ fun HomeScreen(viewModel: PokeApiViewModel, navController: NavHostController) {
 
     LaunchedEffect(Unit) {
         viewModel.getPokemonList(2000)
-    }
 
-    LaunchedEffect(Unit) {
         val index = viewModel.lastScrollState
         if (index > 0) gridState.scrollToItem(index)
+    }
+
+    BackHandler {
+        navController.popBackStack()
     }
 
     Scaffold(
@@ -83,23 +88,26 @@ fun HomeScreen(viewModel: PokeApiViewModel, navController: NavHostController) {
                 rightIcon = Icons.Default.FavoriteBorder,
                 onRightIconClick = {
                     viewModel.lastScrollState = gridState.firstVisibleItemIndex
-                    navController.navigate("favorite")
+                    navController.navigate(Screen.Favorite.route)
                 })
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddings ->
 
-        when (pokemonListState) {
+        when (val state = pokemonListState) {
             is PokeApiViewModel.UiState.Loading -> {
                 LoadingBar(paddings)
             }
 
             is PokeApiViewModel.UiState.Success -> {
-                val listPokemons = (pokemonListState as PokeApiViewModel.UiState.Success).data
                 if (isNetworkAvailable(context)) {
                     ContentHomeScreen(
-                        paddings, listPokemons, viewModel, snackbarHostState, context, gridState,
-                        onClickCard = { pokemonName -> navController.navigate("detail/${pokemonName}") }
+                        paddings, state.data, viewModel, snackbarHostState, context, gridState,
+                        onClickNavigateToDetailScreen = { pokemonName ->
+                            navController.navigate(
+                                Screen.Detail.createRoute(pokemonName)
+                            )
+                        },
                     )
                 } else {
                     CoroutineScope(Dispatchers.Default).launch {
@@ -109,8 +117,7 @@ fun HomeScreen(viewModel: PokeApiViewModel, navController: NavHostController) {
             }
 
             is PokeApiViewModel.UiState.Error -> {
-                val message = (pokemonListState as PokeApiViewModel.UiState.Error).message
-                CardError(message)
+                CardError(state.message)
             }
         }
     }
@@ -124,7 +131,7 @@ private fun ContentHomeScreen(
     snackbarHostState: SnackbarHostState,
     context: Context,
     gridState: LazyGridState,
-    onClickCard: (String) -> Unit
+    onClickNavigateToDetailScreen: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -133,7 +140,10 @@ private fun ContentHomeScreen(
             .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        SearchBarAndFilter(viewModel)
+        SearchBarAndFilter(viewModel, context) { pokemonName ->
+            if (pokemonName != null)
+                onClickNavigateToDetailScreen(pokemonName)
+        }
 
         val messageNoConnection = stringResource(R.string.no_connection)
 
@@ -151,7 +161,7 @@ private fun ContentHomeScreen(
                     onClick = {
                         if (isNetworkAvailable(context)) {
                             viewModel.lastScrollState = gridState.firstVisibleItemIndex
-                            onClickCard(pokemon.name)
+                            onClickNavigateToDetailScreen(pokemon.name)
                         } else {
                             CoroutineScope(Dispatchers.Default).launch {
                                 snackbarHostState.showSnackbar(messageNoConnection)
@@ -165,19 +175,23 @@ private fun ContentHomeScreen(
 }
 
 @Composable
-private fun SearchBarAndFilter(viewModel: PokeApiViewModel) {
+private fun SearchBarAndFilter(
+    viewModel: PokeApiViewModel,
+    context: Context,
+    onSearchClick: (String?) -> Unit
+) {
+    var search by remember { mutableStateOf("") }
+    val messageEnterPokemonName = stringResource(R.string.enter_pokemon_name)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
     ) {
-        var search by remember { mutableStateOf("") }
-        val pokemonState by viewModel.getPokemonByIdOrName.observeAsState(PokeApiViewModel.UiState.Loading)
 
         OutlinedTextField(
             value = search,
-            onValueChange = { search = it
-                viewModel.getPokemonByIdOrName(search) },
+            onValueChange = { search = it },
             placeholder = { Text(stringResource(R.string.enter_pokemon_name)) },
             leadingIcon = {
                 Icon(
@@ -189,8 +203,12 @@ private fun SearchBarAndFilter(viewModel: PokeApiViewModel) {
             singleLine = true,
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    if (search.isNotBlank())
-                        viewModel.getPokemonByIdOrName(search)
+                    if (search.isNotBlank()) {
+                        viewModel.getPokemonByIdOrName(search.lowercase())
+                        onSearchClick(search.lowercase())
+                    } else {
+                        Toast.makeText(context, messageEnterPokemonName, Toast.LENGTH_SHORT).show()
+                    }
                 }
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -208,5 +226,6 @@ private fun getPokemonIdFromUrl(url: String): Int {
 
 private fun getPokemonImageUrl(pokemon: PokemonItem): String {
     val id = getPokemonIdFromUrl(pokemon.url)
-    return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png"
+    val url = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png"
+    return url
 }

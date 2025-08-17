@@ -1,5 +1,6 @@
 package com.vitoravelar.pokedex.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.vitoravelar.pokedex.R
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
+import com.vitoravelar.pokedex.feature.navigation.Screen
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.component.PokemonCard
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
@@ -37,14 +39,15 @@ fun FavoriteScreen(viewModel: PokeApiViewModel, navController: NavHostController
     val favorites by viewModel.listAllFavorite.observeAsState(emptyList())
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold(
-        topBar = {
-            BaseTopAppBar(
-                title = stringResource(R.string.title_favorite),
-                onLeftIconClick = { navController.popBackStack() })
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) })
-    { paddings ->
+    BackHandler {
+        navController.popBackStack()
+    }
+
+    Scaffold(topBar = {
+        BaseTopAppBar(
+            title = stringResource(R.string.title_favorite),
+            onLeftIconClick = { navController.popBackStack() })
+    }, snackbarHost = { SnackbarHost(snackbarHostState) }) { paddings ->
 
         if (favorites.isEmpty()) {
             Box(
@@ -57,11 +60,10 @@ fun FavoriteScreen(viewModel: PokeApiViewModel, navController: NavHostController
             }
         } else
             ContentFavoriteScreen(
-                paddings,
-                favorites, snackbarHostState,
-                onClickCard = { pokemonName ->
-                    navController.navigate("detail/${pokemonName}")
-                })
+                paddings, favorites, snackbarHostState, onClickCard = { pokemonName ->
+                    navController.navigate(Screen.Detail.createRoute(pokemonName))
+                }
+            )
     }
 }
 
@@ -84,9 +86,7 @@ private fun ContentFavoriteScreen(
             val messageNoConnection = stringResource(R.string.no_connection)
 
             PokemonCard(
-                name = pokemon.name,
-                imageUrl = pokemon.imageUrl,
-                onClick = {
+                name = pokemon.name, imageUrl = pokemon.imageUrl, onClick = {
                     if (isNetworkAvailable(context)) {
                         onClickCard(pokemon.name)
                     } else {

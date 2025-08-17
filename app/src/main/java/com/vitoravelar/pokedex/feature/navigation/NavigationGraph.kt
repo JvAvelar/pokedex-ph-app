@@ -1,6 +1,7 @@
 package com.vitoravelar.pokedex.feature.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,17 +16,39 @@ import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
 fun NavigationGraph(viewModel: PokeApiViewModel) {
     val navController = rememberNavController()
 
-    NavHost(navController, startDestination = "home") {
-        composable("home") { HomeScreen(viewModel, navController) }
-        composable("favorite") { FavoriteScreen(viewModel, navController) }
+    NavHost(navController, startDestination = Screen.Home.route) {
+        composable(Screen.Home.route) {
+            val viewModel: PokeApiViewModel = viewModel()
+            HomeScreen(viewModel, navController)
+        }
+        composable(Screen.Favorite.route) {
+            val viewModel: PokeApiViewModel = viewModel()
+            FavoriteScreen(viewModel, navController)
+        }
         composable(
-            route = "detail/{pokemonName}",
+            route = Screen.Detail.route,
             arguments = listOf(
-                navArgument("pokemonName") { type = NavType.StringType }
+                navArgument(Routes.POKEMON_NAME) { type = NavType.StringType }
             )
         ) { entry ->
-            val name = entry.arguments?.getString("pokemonName") ?: ""
+            val name = entry.arguments?.getString(Routes.POKEMON_NAME) ?: ""
+            val viewModel: PokeApiViewModel = viewModel()
             DetailScreen(viewModel, navController, name)
         }
     }
+}
+
+sealed class Screen(val route: String) {
+    object Home : Screen(Routes.HOME)
+    object Favorite : Screen(Routes.FAVORITE)
+    object Detail : Screen("${Routes.DETAIL}/{${Routes.POKEMON_NAME}}") {
+        fun createRoute(pokemonName: String) = "${Routes.DETAIL}/$pokemonName"
+    }
+}
+
+private object Routes {
+    const val HOME = "home"
+    const val FAVORITE = "favorite"
+    const val DETAIL = "detail"
+    const val POKEMON_NAME = "pokemonName"
 }

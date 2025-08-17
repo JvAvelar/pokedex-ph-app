@@ -15,12 +15,15 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
     private val repository = PokeApiRepository.getInstance(application.applicationContext)
 
     val msgUnknownError = "Unknown error"
+    val pokemonNotFound = "Pokemon não encontrado"
 
     sealed class UiState<out T> {
         object Loading : UiState<Nothing>()
         data class Success<T>(val data: T) : UiState<T>()
         data class Error(val message: String) : UiState<Nothing>()
     }
+
+    var lastScrollState: Int = 0
 
     private val _getPokemonList = MutableLiveData<UiState<List<PokemonItem>>>()
     val pokemonList: LiveData<UiState<List<PokemonItem>>> = _getPokemonList
@@ -29,8 +32,6 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
     val getPokemonByIdOrName: LiveData<UiState<PokemonDetail?>> = _getPokemonByIdOrName
 
     val listAllFavorite: LiveData<List<PokemonDetailEntity>> = repository.getFavoriteList()
-
-    var lastScrollState: Int = 0
 
     fun addFavorite(pokemon: PokemonDetailEntity) = viewModelScope.launch {
         repository.addFavorite(pokemon)
@@ -42,7 +43,6 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
 
     fun getPokemonList(limit: Int = 20, offset: Int = 0) = viewModelScope.launch {
         _getPokemonList.postValue(UiState.Loading)
-
         try {
             _getPokemonList.postValue(UiState.Success(repository.getPokemonList(limit, offset)))
         } catch (e: Exception) {
@@ -53,11 +53,11 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
     fun getPokemonByIdOrName(idOrName: String) = viewModelScope.launch {
         _getPokemonByIdOrName.postValue(UiState.Loading)
         try {
-            _getPokemonByIdOrName.postValue(
-                UiState.Success(repository.getPokemonByIdOrName(idOrName.lowercase().trim()))
-            )
+            val result = repository.getPokemonByIdOrName(idOrName.lowercase().trim())
+            _getPokemonByIdOrName.postValue(UiState.Success(result))
+
         } catch (e: Exception) {
-            _getPokemonByIdOrName.postValue(UiState.Error(e.message ?: msgUnknownError))
+            _getPokemonByIdOrName.postValue(UiState.Error(pokemonNotFound))
         }
     }
 }

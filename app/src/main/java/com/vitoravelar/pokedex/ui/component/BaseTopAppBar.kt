@@ -43,7 +43,7 @@ fun BaseTopAppBar(
     Column(
         modifier = Modifier
             .wrapContentWidth()
-            .height(70.dp)
+            .height(100.dp)
             .background(Color.Gray),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

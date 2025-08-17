@@ -6,6 +6,5 @@ import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun CardError(message: String) {
-
     Text(message, fontWeight = FontWeight.Bold)
 }

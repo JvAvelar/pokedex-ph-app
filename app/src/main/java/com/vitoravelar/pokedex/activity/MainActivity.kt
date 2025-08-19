@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vitoravelar.pokedex.feature.navigation.NavigationGraph
 import com.vitoravelar.pokedex.ui.theme.PokedexphappTheme
-import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,8 +21,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val viewModel: PokeApiViewModel = viewModel()
-                    NavigationGraph(viewModel)
+                    NavigationGraph()
                 }
             }
         }

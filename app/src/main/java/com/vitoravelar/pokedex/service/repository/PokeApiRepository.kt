@@ -2,14 +2,15 @@ package com.vitoravelar.pokedex.service.repository
 
 import android.content.Context
 import androidx.lifecycle.LiveData
-import com.vitoravelar.pokedex.feature.model.AbilityItem
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.feature.model.PokemonItem
-import com.vitoravelar.pokedex.feature.model.TypeItem
+import com.vitoravelar.pokedex.feature.model.TypeDetailResponse
+import com.vitoravelar.pokedex.feature.model.TypeResponse
 import com.vitoravelar.pokedex.service.database.PokeDatabase
 import com.vitoravelar.pokedex.service.remote.PokeApiService
 import com.vitoravelar.pokedex.service.remote.RetrofitConfig
+import okio.IOException
 
 class PokeApiRepository private constructor(context: Context) {
 
@@ -37,45 +38,56 @@ class PokeApiRepository private constructor(context: Context) {
 
     suspend fun getPokemonList(limit: Int = 20, offset: Int = 0): List<PokemonItem> {
         return try {
-            val result = service.getAllPokemons(limit, offset)
-            if (result.isSuccessful) result.body()?.results ?: emptyList()
-            else emptyList()
+            val response = service.getAllPokemons(limit, offset)
+            if (response.isSuccessful)
+                response.body()?.results
+                    ?: throw IOException("Response body is null (successful response)")
+            else
+                throw IOException("Failed ${response.code()} - ${response.message()}")
         } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
+            throw e
         }
     }
 
-    suspend fun getPokemonByIdOrName(idOrName: String): PokemonDetail? {
+    suspend fun getPokemonByIdOrName(idOrName: String): PokemonDetail {
         return try {
-            val result = service.getPokemonByIdOrName(idOrName)
-            if (result.isSuccessful) result.body()
-            else null
+            val response = service.getPokemonByIdOrName(idOrName)
+            if (response.isSuccessful)
+                response.body()
+                    ?: throw IOException("Response body is null (successful response)")
+            else
+                throw IOException("Failed ${response.code()} - ${response.message()}")
         } catch (e: Exception) {
-            e.printStackTrace()
-            null
+            throw e
         }
     }
 
-    suspend fun getTypePokemon(): List<TypeItem> {
+
+    suspend fun getPokemonTypes(): TypeResponse {
         return try {
-            val result = service.getTypePokemon()
-            if (result.isSuccessful) result.body()?.results ?: emptyList()
-            else emptyList()
+            val response = service.getPokemonTypes()
+            if (response.isSuccessful) {
+                response.body()
+                    ?: throw IOException("Response body is null  (successful response)")
+            } else {
+                throw IOException("Failed ${response.code()} - ${response.message()}")
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
+            throw e
         }
     }
 
-    suspend fun getAbility(): List<AbilityItem> {
+    suspend fun getPokemonTypesDetails(typeName: String): TypeDetailResponse {
         return try {
-            val result = service.getAbility()
-            if (result.isSuccessful) result.body()?.results ?: emptyList()
-            else emptyList()
+            val response = service.getPokemonTypeDetails(typeName.lowercase())
+            if (response.isSuccessful) {
+                response.body()
+                    ?: throw IOException("Response body is null for type details request: $typeName (successful response)")
+            } else {
+                throw IOException("Failed $typeName: ${response.code()} - ${response.message()}")
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
+            throw e
         }
     }
 }

@@ -23,6 +23,6 @@
     <color name="bug">#FFF59D</color>
     <color name="normal">#FFCDD2</color>
     <color name="flying">#FFCCBC</color>
-    <color name="fighting">#2D2322</color>
+    <color name="fighting">#4B6F2C28</color>
     <color name="rock">#705D18</color>
 </resources>

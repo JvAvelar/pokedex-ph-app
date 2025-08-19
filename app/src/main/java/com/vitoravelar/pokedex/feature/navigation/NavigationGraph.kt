@@ -13,7 +13,7 @@ import com.vitoravelar.pokedex.ui.screen.HomeScreen
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
 
 @Composable
-fun NavigationGraph(viewModel: PokeApiViewModel) {
+fun NavigationGraph() {
     val navController = rememberNavController()
 
     NavHost(navController, startDestination = Screen.Home.route) {

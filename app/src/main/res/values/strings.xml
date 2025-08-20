@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">pokedex-ph-app</string>
+    <string name="app_name">Pokedex</string>
     <string name="no_connection">No internet connection</string>
     <string name="title_pokemon">Pokémon</string>
     <string name="title_favorite">Favorite pokemons</string>

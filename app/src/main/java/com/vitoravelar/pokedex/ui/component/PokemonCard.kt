@@ -45,7 +45,7 @@ fun PokemonCard(name: String, imageUrl: String, onClick: () -> Unit) {
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = name, style = MaterialTheme.typography.bodyMedium)
+            Text(text = name, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
         }
     }
 }

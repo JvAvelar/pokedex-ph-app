@@ -2,6 +2,7 @@ package com.vitoravelar.pokedex.service.repository
 
 import android.content.Context
 import androidx.lifecycle.LiveData
+import com.vitoravelar.pokedex.feature.model.DetailFavoritesEntity
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.feature.model.PokemonItem
@@ -30,12 +31,20 @@ class PokeApiRepository private constructor(context: Context) {
         }
     }
 
+    // OFFLINE - Database
     suspend fun addFavorite(pokemon: PokemonDetailEntity) = database.insert(pokemon)
 
     suspend fun removeFavorite(pokemon: PokemonDetailEntity) = database.delete(pokemon)
 
     fun getFavoriteList(): LiveData<List<PokemonDetailEntity>> = database.getAllPokemons()
 
+    suspend fun addDetail(details: DetailFavoritesEntity) = database.insertDetails(details)
+    suspend fun removeDetail(details: DetailFavoritesEntity) = database.insertDetails(details)
+
+    fun getDetailList(): LiveData<List<DetailFavoritesEntity>> = database.getAllDetails()
+
+
+    // Service - Api
     suspend fun getPokemonList(limit: Int = 20, offset: Int = 0): List<PokemonItem> {
         return try {
             val response = service.getAllPokemons(limit, offset)

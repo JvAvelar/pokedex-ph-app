@@ -10,13 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -49,14 +47,15 @@ import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.vitoravelar.pokedex.R
+import com.vitoravelar.pokedex.feature.model.DetailFavoritesEntity
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
-import com.vitoravelar.pokedex.feature.navigation.Screen
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
-import com.vitoravelar.pokedex.ui.component.CardError
 import com.vitoravelar.pokedex.ui.component.LoadingBar
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
 import com.vitoravelar.pokedex.utils.PokemonTypeColors
+import com.vitoravelar.pokedex.utils.RefreshScreen
+import com.vitoravelar.pokedex.utils.isNetworkAvailable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,8 +68,11 @@ fun DetailScreen(
     pokemonName: String
 ) {
     val pokemonState by viewModel.getPokemonByIdOrName.observeAsState(PokeApiViewModel.UiState.Loading)
+    val favorites by viewModel.listAllFavorite.observeAsState(emptyList())
+
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val messageNoConnection = stringResource(R.string.no_connection)
 
     LaunchedEffect(Unit) {
         viewModel.getPokemonByIdOrName(pokemonName)
@@ -94,30 +96,35 @@ fun DetailScreen(
             }
 
             is PokeApiViewModel.UiState.Success -> {
-                val pokemon = state.data
-                if (pokemon != null)
-                    DetailCard(paddings, pokemon, viewModel)
-                else {
+                state.data?.let { pokemon ->
+                    DetailCardOnline(paddings, favorites, pokemon, viewModel)
+                }
+            }
+
+            is PokeApiViewModel.UiState.Error -> {
+                if (isNetworkAvailable(context)) {
                     Toast.makeText(
                         context, stringResource(R.string.pokemon_not_found),
                         Toast.LENGTH_SHORT
                     ).show()
                     navController.popBackStack()
+                } else {
+                    RefreshScreen(viewModel)
+                    CoroutineScope(Dispatchers.Default).launch {
+                        snackbarHostState.showSnackbar(messageNoConnection)
+                    }
                 }
-            }
-
-            is PokeApiViewModel.UiState.Error -> {
-                val message = (pokemonState as PokeApiViewModel.UiState.Error).message
-                CardError(message)
             }
         }
     }
 }
 
+
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-private fun DetailCard(
+private fun DetailCardOnline(
     padding: PaddingValues,
+    favorite: List<PokemonDetailEntity>,
     pokemon: PokemonDetail,
     viewModel: PokeApiViewModel
 ) {
@@ -130,17 +137,28 @@ private fun DetailCard(
         elevation = CardDefaults.cardElevation(8.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
+        val isFavorite = favorite.any { it.id == pokemon.id }
+
+        val skillList = pokemon.abilities.map { skill -> skill.ability.name }
+        val detail = DetailFavoritesEntity(
+            pokemonId = pokemon.id,
+            pokemonName = pokemon.name,
+            hp = pokemon.stats[0].baseStat,
+            attack = pokemon.stats[1].baseStat,
+            defense = pokemon.stats[2].baseStat,
+            specialAttack = pokemon.stats[3].baseStat,
+            specialDefense = pokemon.stats[4].baseStat,
+            speed = pokemon.stats[5].baseStat,
+            skills = skillList.joinToString(",") { it.trim() }
+        )
+
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                val favorite by viewModel.listAllFavorite.observeAsState(emptyList())
-                val isFavorite = favorite.any { it.id == pokemon.id }
-
                 IconButton(onClick = {
                     val pokemonEntity = PokemonDetailEntity(
                         pokemon.id,
@@ -148,8 +166,13 @@ private fun DetailCard(
                         pokemon.sprites.other.officialArtwork.imageUrl!!,
                         pokemon.types[0].type.name
                     )
-                    if (isFavorite) viewModel.removeFavorite(pokemonEntity)
-                    else viewModel.addFavorite(pokemonEntity)
+                    if (isFavorite) {
+                        viewModel.removeFavorite(pokemonEntity)
+                        viewModel.removeDetailsFavorite(detail)
+                    } else {
+                        viewModel.addFavorite(pokemonEntity)
+                        viewModel.addDetailsFavorite(detail)
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
@@ -175,7 +198,6 @@ private fun DetailCard(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
-
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pokemon.types.forEach { typeSlot ->

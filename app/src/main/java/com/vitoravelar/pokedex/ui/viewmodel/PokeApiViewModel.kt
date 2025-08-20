@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.vitoravelar.pokedex.feature.model.DetailFavoritesEntity
 import com.vitoravelar.pokedex.feature.model.PokemonDetail
 import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.feature.model.PokemonItem
@@ -49,7 +50,6 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
     private val _getPokemonByIdOrName = MutableLiveData<UiState<PokemonDetail?>>()
     val getPokemonByIdOrName: LiveData<UiState<PokemonDetail?>> = _getPokemonByIdOrName
 
-    val listAllFavorite: LiveData<List<PokemonDetailEntity>> = repository.getFavoriteList()
 
     init {
         loadInitialPokemon()
@@ -166,6 +166,21 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun getPokemonByIdOrName(idOrName: String) =
+        viewModelScope.launch {
+            _getPokemonByIdOrName.postValue(UiState.Loading)
+            try {
+                val result = repository.getPokemonByIdOrName(idOrName.lowercase().trim())
+                _getPokemonByIdOrName.postValue(UiState.Success(result))
+            } catch (e: Exception) {
+                _getPokemonByIdOrName.postValue(UiState.Error(pokemonNotFound))
+            }
+        }
+
+    // OFFLINE - DATABASE
+    val listAllFavorite: LiveData<List<PokemonDetailEntity>> = repository.getFavoriteList()
+    val listAllDetails: LiveData<List<DetailFavoritesEntity>> = repository.getDetailList()
+
     fun addFavorite(pokemon: PokemonDetailEntity) = viewModelScope.launch {
         repository.addFavorite(pokemon)
     }
@@ -174,14 +189,11 @@ class PokeApiViewModel(application: Application) : AndroidViewModel(application)
         repository.removeFavorite(pokemon)
     }
 
-    fun getPokemonByIdOrName(idOrName: String) = viewModelScope.launch {
-        _getPokemonByIdOrName.postValue(UiState.Loading)
-        try {
-            val result = repository.getPokemonByIdOrName(idOrName.lowercase().trim())
-            _getPokemonByIdOrName.postValue(UiState.Success(result))
+    fun addDetailsFavorite(details: DetailFavoritesEntity) = viewModelScope.launch{
+        repository.addDetail(details)
+    }
 
-        } catch (e: Exception) {
-            _getPokemonByIdOrName.postValue(UiState.Error(pokemonNotFound))
-        }
+    fun removeDetailsFavorite(details: DetailFavoritesEntity) = viewModelScope.launch{
+        repository.removeDetail(details)
     }
 }

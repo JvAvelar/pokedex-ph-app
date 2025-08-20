@@ -39,6 +39,8 @@ fun FavoriteScreen(viewModel: PokeApiViewModel, navController: NavHostController
     val favorites by viewModel.listAllFavorite.observeAsState(emptyList())
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val context = LocalContext.current
+
     BackHandler {
         navController.popBackStack()
     }
@@ -58,12 +60,17 @@ fun FavoriteScreen(viewModel: PokeApiViewModel, navController: NavHostController
             ) {
                 Text(stringResource(R.string.no_favorite_yet))
             }
-        } else
+        } else {
             ContentFavoriteScreen(
-                paddings, favorites, snackbarHostState, onClickCard = { pokemonName ->
-                    navController.navigate(Screen.Detail.createRoute(pokemonName))
+                paddings, favorites, onClickCard = { pokemonName ->
+                    if (isNetworkAvailable(context))
+                        navController.navigate(Screen.Detail.createRoute(pokemonName))
+                    else
+                       navController.navigate(Screen.DetailOffline.createRoute(pokemonName))
+
                 }
             )
+        }
     }
 }
 
@@ -71,7 +78,6 @@ fun FavoriteScreen(viewModel: PokeApiViewModel, navController: NavHostController
 private fun ContentFavoriteScreen(
     paddings: PaddingValues,
     favorites: List<PokemonDetailEntity>,
-    snackbarHostState: SnackbarHostState,
     onClickCard: (String) -> Unit
 ) {
     LazyVerticalGrid(
@@ -82,19 +88,9 @@ private fun ContentFavoriteScreen(
         contentPadding = PaddingValues(8.dp)
     ) {
         items(favorites) { pokemon ->
-            val context = LocalContext.current
-            val messageNoConnection = stringResource(R.string.no_connection)
-
             PokemonCard(
-                name = pokemon.name, imageUrl = pokemon.imageUrl, onClick = {
-                    if (isNetworkAvailable(context)) {
-                        onClickCard(pokemon.name)
-                    } else {
-                        CoroutineScope(Dispatchers.Default).launch {
-                            snackbarHostState.showSnackbar(messageNoConnection)
-                        }
-                    }
-                }
+                name = pokemon.name, imageUrl = pokemon.imageUrl,
+                onClick = { onClickCard(pokemon.name) }
             )
         }
     }

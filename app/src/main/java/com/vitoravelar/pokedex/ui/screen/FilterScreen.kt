@@ -1,5 +1,8 @@
-package com.vitoravelar.pokedex.ui.screen // Ou onde quer que seu FilterScreen esteja
+package com.vitoravelar.pokedex.ui.screen
 
+import android.content.Context
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -28,12 +30,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitoravelar.pokedex.R
 import com.vitoravelar.pokedex.feature.model.TypeItem
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
+import com.vitoravelar.pokedex.utils.isNetworkAvailable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +49,8 @@ fun FilterScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val typesUiState by viewModel.pokemonTypesState.observeAsState(PokeApiViewModel.UiState.Loading)
 
-    val currentSelectedType by viewModel.selectedTypeFilter.observeAsState()
+    val context = LocalContext.current
+    val messageNoConnection = stringResource(R.string.no_connection)
 
     LaunchedEffect(Unit) {
         viewModel.fetchPokemonTypes()
@@ -68,58 +74,87 @@ fun FilterScreen(
 
             when (val state = typesUiState) {
                 is PokeApiViewModel.UiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp), contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator()
                     }
                 }
+
                 is PokeApiViewModel.UiState.Success -> {
-                    val types = state.data
-                    if (types.isNotEmpty()) {
-                        Button(
-                            onClick = {
-                                viewModel.setTypeFilter(null)
-                                onDismiss()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = currentSelectedType != null
-                        ) {
-                            Text("Limpar Filtro / Mostrar Todos")
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            items(types, key = { it.name }) { typeItem ->
-                                TypeFilterItem(
-                                    typeItem = typeItem,
-
-                                    isSelected = typeItem.name == currentSelectedType?.name,
-                                    onTypeClick = { selected ->
-                                        viewModel.setTypeFilter(selected)
-                                        onDismiss()
-                                    }
-                                )
-                                HorizontalDivider(modifier = Modifier.height(1.dp))
-                            }
-                        }
-                    } else {
-                        Text("Nenhum tipo encontrado.", modifier = Modifier.align(Alignment.CenterHorizontally))
-                    }
+                    OptionsTypes(viewModel, state.data, context) { onDismiss() }
                 }
+
                 is PokeApiViewModel.UiState.Error -> {
-                    Text(
-                        text = "Erro ao carregar tipos: ${state.message}",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    Toast.makeText(
+                        context,
+                        messageNoConnection,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
+
+@Composable
+private fun OptionsTypes(
+    viewModel: PokeApiViewModel,
+    types: List<TypeItem>,
+    context: Context,
+    onDismiss: () -> Unit
+) {
+    val currentSelectedType by viewModel.selectedTypeFilter.observeAsState()
+    val messageNoConnection = stringResource(R.string.no_connection)
+
+    if (types.isNotEmpty()) {
+        Button(
+            onClick = {
+                viewModel.setTypeFilter(null)
+                onDismiss()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = currentSelectedType != null
+        ) {
+            Text("Limpar Filtro / Mostrar Todos")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(types, key = { it.name }) { typeItem ->
+                TypeFilterItem(
+                    typeItem = typeItem,
+                    isSelected = typeItem.name == currentSelectedType?.name,
+                    onTypeClick = { selected ->
+                        if (isNetworkAvailable(context)) {
+                            viewModel.setTypeFilter(selected)
+                            onDismiss()
+                        } else
+                            Toast.makeText(
+                                context,
+                                messageNoConnection,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                    }
+                )
+                HorizontalDivider(modifier = Modifier.height(1.dp))
+            }
+        }
+    } else {
+        Box(Modifier, contentAlignment = Alignment.Center) {
+            Text(
+                "Nenhum tipo encontrado.", fontSize = 22.sp
+            )
+        }
+    }
+}
+
 @Composable
 fun TypeFilterItem(
     typeItem: TypeItem,

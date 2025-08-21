@@ -10,5 +10,7 @@
     <string name="skills">Skills</string>
     <string name="loading_pokemons">Loading pokemons…</string>
     <string name="pokemon_not_found">Pokemon not found</string>
+    <string name="clear_filter">Limpar Filtro</string>
+    <string name="not_type_found">Nenhum tipo encontrado.</string>
 
 </resources>

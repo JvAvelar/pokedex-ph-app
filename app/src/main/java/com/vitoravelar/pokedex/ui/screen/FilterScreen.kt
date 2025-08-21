@@ -2,7 +2,6 @@ package com.vitoravelar.pokedex.ui.screen
 
 import android.content.Context
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,7 +83,7 @@ fun FilterScreen(
                 }
 
                 is PokeApiViewModel.UiState.Success -> {
-                    OptionsTypes(viewModel, state.data, context) { onDismiss() }
+                    OptionsTypes(viewModel, state.data, context) { onDismiss }
                 }
 
                 is PokeApiViewModel.UiState.Error -> {
@@ -119,7 +118,7 @@ private fun OptionsTypes(
             modifier = Modifier.fillMaxWidth(),
             enabled = currentSelectedType != null
         ) {
-            Text("Limpar Filtro / Mostrar Todos")
+            Text(stringResource(R.string.clear_filter))
         }
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -149,7 +148,7 @@ private fun OptionsTypes(
     } else {
         Box(Modifier, contentAlignment = Alignment.Center) {
             Text(
-                "Nenhum tipo encontrado.", fontSize = 22.sp
+                stringResource(R.string.not_type_found), fontSize = 22.sp
             )
         }
     }

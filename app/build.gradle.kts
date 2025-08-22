@@ -55,6 +55,7 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.androidx.foundation.layout)
     ksp(libs.androidx.room.compiler)
     implementation(libs.room.ktx)
 

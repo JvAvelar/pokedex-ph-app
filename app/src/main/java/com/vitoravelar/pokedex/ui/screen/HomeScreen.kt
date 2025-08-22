@@ -70,11 +70,13 @@ import kotlinx.coroutines.launch
 fun HomeScreen(viewModel: PokeApiViewModel, navController: NavHostController) {
 
     val pokemonListUiState by viewModel.pokemonListState.observeAsState(PokeApiViewModel.UiState.Loading)
-    var showFilterSheet by remember { mutableStateOf(false) }
     val currentActiveFilter by viewModel.selectedTypeFilter.observeAsState()
+
+    var showFilterSheet by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val gridState = rememberLazyGridState()
+
     val context = LocalContext.current
     val messageNoConnection = stringResource(R.string.no_connection)
 
@@ -129,7 +131,7 @@ fun HomeScreen(viewModel: PokeApiViewModel, navController: NavHostController) {
     Scaffold(
         topBar = {
             BaseTopAppBar(
-                stringResource(R.string.title_pokemon),
+                title = stringResource(R.string.title_pokemon),
                 leftIcon = null,
                 rightIcon = Icons.Default.FavoriteBorder,
                 onRightIconClick = { navController.navigate(Screen.Favorite.route) }

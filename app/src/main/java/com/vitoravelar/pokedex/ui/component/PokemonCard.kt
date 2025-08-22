@@ -29,7 +29,11 @@ fun PokemonCard(name: String, imageUrl: String, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor =  MaterialTheme.colorScheme.onSurface,
+        )
     ) {
         Column(
             modifier = Modifier

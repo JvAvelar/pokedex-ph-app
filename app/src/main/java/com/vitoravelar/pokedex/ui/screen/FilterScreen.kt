@@ -83,7 +83,7 @@ fun FilterScreen(
                 }
 
                 is PokeApiViewModel.UiState.Success -> {
-                    OptionsTypes(viewModel, state.data, context) { onDismiss }
+                    OptionsTypes(viewModel, state.data, context) { onDismiss() }
                 }
 
                 is PokeApiViewModel.UiState.Error -> {

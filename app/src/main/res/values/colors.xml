@@ -18,11 +18,13 @@
     <color name="ice">#98D8D8</color>
     <color name="dragon">#7038F8</color>
     <color name="poison">#7854B1</color>
-    <color name="ghost">#201B1B</color>
+    <color name="ghost">#48625D5D</color>
     <color name="psychic">#EE99AC</color>
     <color name="bug">#FFF59D</color>
     <color name="normal">#FFCDD2</color>
     <color name="flying">#FFCCBC</color>
     <color name="fighting">#4B6F2C28</color>
     <color name="rock">#705D18</color>
+    <color name="steel">#B8B8D0</color>
+    <color name="fairy">#F0B6BC</color>
 </resources>

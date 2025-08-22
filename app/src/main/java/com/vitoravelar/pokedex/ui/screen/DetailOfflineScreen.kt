@@ -36,7 +36,7 @@ import com.vitoravelar.pokedex.R
 import com.vitoravelar.pokedex.feature.model.DetailFavoritesEntity
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
-import com.vitoravelar.pokedex.utils.PokemonStatsColor
+import com.vitoravelar.pokedex.utils.PokemonDetailColor
 
 @Composable
 fun DetailOfflineScreen(
@@ -134,7 +134,7 @@ private fun DetailCardOffline(
                                 )
                             },
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = PokemonStatsColor.getColor(stat.key)
+                                containerColor = PokemonDetailColor.getColor(stat.key)
                             )
                         )
                     }
@@ -178,7 +178,7 @@ private fun DetailCardOffline(
                                 )
                             },
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = colorResource(R.color.psychic)
+                                containerColor = colorResource(R.color.fire)
                             )
                         )
                     }

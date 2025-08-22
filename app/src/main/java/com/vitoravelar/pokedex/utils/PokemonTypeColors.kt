@@ -24,6 +24,7 @@ object PokemonTypeColors {
         "psychic" to R.color.psychic,
         "steel" to R.color.steel,
         "fairy" to R.color.fairy,
+        "dark" to R.color.dark,
     )
 
     @Composable

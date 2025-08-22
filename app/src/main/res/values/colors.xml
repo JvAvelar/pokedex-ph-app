@@ -10,6 +10,7 @@
     <color name="primary_color">#443F3F</color>
 
     <color name="background">#F5F5F5</color>
+    <color name="attack_color">#FD3326</color>
     <color name="fire">#F08030</color>
     <color name="water">#6890F0</color>
     <color name="grass">#78C850</color>
@@ -27,4 +28,5 @@
     <color name="rock">#705D18</color>
     <color name="steel">#B8B8D0</color>
     <color name="fairy">#F0B6BC</color>
+    <color name="dark">#464444</color>
 </resources>

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,7 +57,7 @@ import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.component.LoadingBar
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
-import com.vitoravelar.pokedex.utils.PokemonStatsColor
+import com.vitoravelar.pokedex.utils.PokemonDetailColor
 import com.vitoravelar.pokedex.utils.PokemonTypeColors
 import com.vitoravelar.pokedex.utils.RefreshScreen
 import com.vitoravelar.pokedex.utils.isNetworkAvailable
@@ -213,7 +214,8 @@ private fun DetailCardOnline(
                         onClick = {},
                         label = { Text(typeSlot.type.name.uppercase()) },
                         colors = AssistChipDefaults.assistChipColors(
-                            containerColor = PokemonTypeColors.getColor(typeSlot.type.name)
+                            containerColor = PokemonTypeColors.getColor(typeSlot.type.name),
+                            labelColor = if (isSystemInDarkTheme()) Color.Black else Color.White
                         )
                     )
                 }
@@ -256,7 +258,7 @@ private fun DetailCardOnline(
                                 )
                             },
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = PokemonStatsColor.getColor(stat.stat.name)
+                                containerColor = PokemonDetailColor.getColor(stat.stat.name)
                             )
                         )
                     }
@@ -301,7 +303,7 @@ private fun DetailCardOnline(
                                 )
                             },
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = colorResource(R.color.psychic)
+                                containerColor = colorResource(R.color.fire)
                             )
                         )
                     }

@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,7 @@ import com.vitoravelar.pokedex.feature.model.PokemonDetailEntity
 import com.vitoravelar.pokedex.ui.component.BaseTopAppBar
 import com.vitoravelar.pokedex.ui.component.LoadingBar
 import com.vitoravelar.pokedex.ui.viewmodel.PokeApiViewModel
+import com.vitoravelar.pokedex.utils.PokemonStatsColor
 import com.vitoravelar.pokedex.utils.PokemonTypeColors
 import com.vitoravelar.pokedex.utils.RefreshScreen
 import com.vitoravelar.pokedex.utils.isNetworkAvailable
@@ -120,7 +124,7 @@ fun DetailScreen(
 }
 
 
-@OptIn(ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalGlideComposeApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun DetailCardOnline(
     padding: PaddingValues,
@@ -135,7 +139,11 @@ private fun DetailCardOnline(
             .padding(padding)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
     ) {
         val isFavorite = favorite.any { it.id == pokemon.id }
 
@@ -226,15 +234,32 @@ private fun DetailCardOnline(
                 Text(
                     text = stringResource(R.string.statistics),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                pokemon.stats.forEach { stat ->
-                    Text(
-                        text = "${stat.stat.name.replaceFirstChar { it.uppercase() }}: ${stat.baseStat}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 16.sp
-                    )
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    pokemon.stats.forEach { stat ->
+                        AssistChip(
+                            onClick = {},
+                            label = {
+                                Text(
+                                    text = "${stat.stat.name.replaceFirstChar { it.uppercase() }}: ${stat.baseStat}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = PokemonStatsColor.getColor(stat.stat.name)
+                            )
+                        )
+                    }
                 }
             }
 
@@ -253,15 +278,33 @@ private fun DetailCardOnline(
                 Text(
                     text = stringResource(R.string.skills),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp
                 )
+
                 Spacer(modifier = Modifier.height(4.dp))
-                pokemon.abilities.forEach { abilitySlot ->
-                    Text(
-                        text = abilitySlot.ability.name.replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 16.sp
-                    )
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    pokemon.abilities.forEach { abilitySlot ->
+                        AssistChip(
+                            onClick = {},
+                            label = {
+                                Text(
+                                    text = abilitySlot.ability.name.replaceFirstChar { it.uppercase() },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = colorResource(R.color.psychic)
+                            )
+                        )
+                    }
                 }
             }
         }

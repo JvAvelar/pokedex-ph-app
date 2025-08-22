@@ -21,7 +21,9 @@ object PokemonTypeColors {
         "rock" to R.color.rock,
         "bug" to R.color.bug,
         "dragon" to R.color.dragon,
-        "psychic" to R.color.psychic
+        "psychic" to R.color.psychic,
+        "steel" to R.color.steel,
+        "fairy" to R.color.fairy,
     )
 
     @Composable
